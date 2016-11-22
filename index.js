@@ -5,8 +5,8 @@ var fs = require('fs')
 var util = require('util')
 
 var MAX_LENGTH = 100
-var PATTERN = /^(?:fixup!\s*)?(\w*)(\(([\w\$\.\*/-]*)\))?\: (.*)$/
-var IGNORED = /^WIP\:/
+var PATTERN = /^(?:fixup!\s*)?(\w*)(\(([\w\$ \.\*\/-]*)\))?\: (.*)$/
+var IGNORED = /(^WIP\:)|(^Merge branch .* into .*)/
 var TYPES = {
   amend: true,
   feat: true,
@@ -73,3 +73,17 @@ var validateMessage = function(message) {
 function firstLineFromBuffer (buffer) {
   return buffer.toString().split('\n').shift()
 }
+
+var commitMsgFile = process.argv[2]
+var incorrectLogFile = commitMsgFile.replace('COMMIT_EDITMSG', 'logs/incorrect-commit-msgs')
+
+fs.readFile(commitMsgFile, function (err, buffer) {
+  var msg = firstLineFromBuffer(buffer)
+  if (!validateMessage(msg)) {
+    fs.appendFile(incorrectLogFile, msg + '\n', function () {
+      process.exit(1)
+    })
+  } else {
+    process.exit(0)
+  }
+})
